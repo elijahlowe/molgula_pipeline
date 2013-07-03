@@ -1,0 +1,14 @@
+git clone https://github.com/ngs-docs/ngs-scripts.git /root/ngs-scripts
+
+formatdb -i /mnt/ocu_dn_transcriptome.fa -o T -p F
+formatdb -i /mnt/occu_dn_transcriptome.fa -o T -p F
+
+blastall -p blastn -i /mnt/occ_dn_transcriptome.fa -v 2 -b 2 -e 1e-12 -d /mnt/ocu_dn_transcriptome.fa -o occVocu.output
+blastall -p blastn -d /mnt/occ_dn_transcriptome.fa -v 2 -b 2 -e 1e-12 -i /mnt/ocu_dn_transcriptome.fa -o ocuVocc.output
+
+python ~/ngs-scripts/blast/blast-to-csv.py /mnt/occVocu.output > /mnt/occVocu.csv
+python ~/ngs-scripts/blast/blast-to-csv.py /mnt/ocuVocc.output > /mnt/ocuVocc.csv
+
+python find-reciprocal-2.py /mnt/occVocu.csv /mnt/ocuVocc.csv > mol_recipr.csv
+
+python /mnt/molgula_pipeline/scripts/
