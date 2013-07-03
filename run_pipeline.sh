@@ -28,5 +28,12 @@ mv tmp ocu_dn_transcriptome.fa
 
 rm tmp
 
+python 
+
 echo "Running blast"
 blast_and_filter.sh
+
+echo "Plotting with R"
+mkdir
+/mnt/graphs
+R molgula_de_analysis.R
