@@ -9,11 +9,13 @@ for line in counts_file:
 
 column1, column2 = [],[]
 for line in csv:
-    col1, col2 = line.rstrip('\r\n').split(',')
+    col1 = line.rstrip('\r\n')
+#    col1, col2 = line.rstrip('\r\n').split(',')
+#    print col1
     if col1 in counts:
         print col1+'\t'+counts[col1]
     else:
-        print col2+'\t'+counts[col2]
+        continue #print col2+'\t'+counts[col2]
 
 
 
