@@ -1,0 +1,1 @@
+READ=/reads/occulta/round*/*.gz
