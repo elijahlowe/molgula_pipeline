@@ -1,22 +1,18 @@
-cd /usr/local/share/khmer
-echo 'export PYTHONPATH=/usr/local/share/khmer/python' >> ~/.bashrc
-source ~/.bashrc
-
-cd -
+#cd /usr/local/share/khmer
+#echo 'export PYTHONPATH=/usr/local/share/khmer/python' >> ~/.bashrc
+#source ~/.bashrc
 
 SPEICES1=Mocu
 SPEICES2=Ciona
-Transcriptome=""
-Ref_Transcriptome=""
+Transcriptome=/mnt/Mocu_25_dn_trans_cd.fa
+Ref_Transcriptome=/mnt/ciona_transcriptome.fa
 
 *.annot: *.homol *.ortho
-	python /usr/local/share/eel-pond/annotate-seqs.py ${Ref_Transcriptome} ${SPEICES1}.x.${SPEICES2}.ortho ${SPEICES1}.x.${SPEICES2}.homol
+	python /usr/local/share/eel-pond/annotate-seqs.py ${SPEICES1}_transcriptome.renamed.fa ${SPEICES1}.x.${SPEICES2}.ortho ${SPEICES1}.x.${SPEICES2}.homol > Log.annot
 
 *.homol *.ortho: ${SPEICES1}.x.${SPEICES2}
 	python /usr/local/share/eel-pond/make-uni-best-hits.py ${SPEICES1}.x.${SPEICES2} ${SPEICES1}.x.${SPEICES2}.homol
 	python /usr/local/share/eel-pond/make-reciprocal-best-hits.py ${SPEICES1}.x.${SPEICES2} ${SPEICES2}.x.${SPEICES1} ${SPEICES1}.x.${SPEICES2}.ortho
-#change file eel-pond/namedb.py
-	printf "import cPickle\nimport screed\n\nmouse_names = cPickle.load(open(\'${SPEICES2}.namedb\'))\nmouse_fullname = cPickle.load(open(\'${SPEICES2}.namedb.fullname\'))\nmouse_seqs = screed.ScreedDB(\'${Ref_Transcriptome}\')" > /usr/local/share/eel-pond/namedb.py
 	python /usr/local/share/eel-pond/make-namedb.py ${Ref_Transcriptome} ${SPEICES2}.namedb
 	python -m screed.fadbm ${Ref_Transcriptome}
 
