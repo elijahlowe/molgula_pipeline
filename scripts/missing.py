@@ -17,5 +17,5 @@ for hits in blastparser.parse_file(blast_file):
 
 for n, record in enumerate(screed.open(infile)):
     if record['name'] not in recov:
-        '>%s/2\n%s' % (record[name], record['sequence'])
+        '>%s/2\n%s' % (record['name'], record['sequence'])
 
