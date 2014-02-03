@@ -47,7 +47,9 @@ for n, record in enumerate(fastq_iter(open(sys.argv[1]))):
             name, record = None, None
             n_pe += 1
         else:
-            print >>single_fp, '>%s\n%s' % (last_name, last_record['sequence'])
+#            print >>single_fp, '>%s\n%s' % (last_name, last_record['sequence'])
+            print >>single_fp, '@%s %s\n%s\n+\n%s' % (last_name, last_record.annotations,
+                                     last_record.sequence, last_record.accuracy)
             n_se += 1
 
     last_name = name
@@ -64,14 +66,16 @@ if last_record:
         name, record = None, None
         n_pe += 1
     else:
-        print >>single_fp, '>%s\n%s' % (last_name, last_record['sequence'])
-        print >>paired_fp, '@%s %s\n%s\n+\n%s' % (last_name, last_record.annotations,
+#        print >>single_fp, '>%s\n%s' % (last_name, last_record['sequence'])
+        print >>single_fp, '@%s %s\n%s\n+\n%s' % (last_name, last_record.annotations,
                                      last_record.sequence, last_record.accuracy)
         name, record = None, None
         n_se += 1
 
 if record:
-    print >>single_fp, '>%s\n%s' % (name, record['sequence'])
+#    print >>single_fp, '>%s\n%s' % (name, record['sequence'])
+    print >>single_fp, '@%s %s\n%s\n+\n%s' % (last_name, last_record.annotations,
+                                     last_record.sequence, last_record.accuracy)
     n_se += 1
 
 single_fp.close()
