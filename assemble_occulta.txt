@@ -1,0 +1,110 @@
+==============================
+De novo RNA-Seq Assembly
+==============================
+
+Trinty and Velvet/Oases are two of the many programs available for de novo RNA-seq assembly.::
+	apt-get update
+	apt-get -y --force-yes install libbz2-1.0 libbz2-dev libncurses5-dev openjdk-6-jre-headless zlib1g-dev
+    
+=============================
+Installing trinity
+=============================
+Now change to the /mnt directory and download Trinity:::
+	cd /mnt
+	wget http://downloads.sourceforge.net/project/trinityrnaseq/trinityrnaseq_r2013-02-25.tgz?r=http%3A%2F%2Fsourceforge.net%2Fprojects%2Ftrinityrnaseq%2Ffiles%2Ftrinityrnaseq_r2013-02-25.tgz%2Fdownload&ts=1371471384&use_mirror=superb-dca3 
+	mv trinityrnaseq_r2013-02-25.tgz?r=http%3A%2F%2Fsourceforge.net%2Fprojects%2Ftrinityrnaseq%2Ffiles%2Ftrinityrnaseq_r2013-02-25.tgz%2Fdownload&ts=1371471384&use_mirror=superb-dca3 trinityrnaseq_r2013-02-25.tgz 
+	tar xvfz trinityrnaseq_r2013-02-25.tgz 
+	cd trinityrnaseq_r2013-02-25 
+	make
+    
+The latest version of Trinity using bowtie when building your transcriptome, so you must install bowtie as well.:
+	cd /mnt
+	curl -O -L http://sourceforge.net/projects/bowtie-bio/files/bowtie/0.12.7/bowtie-0.12.7-linux-x86_64.zip
+	unzip bowtie-0.12.7-linux-x86_64.zip
+	cd bowtie-0.12.7
+	cp bowtie bowtie-build bowtie-inspect /usr/local/bin
+ 
+=============================
+Installing Velvet/Oases
+=============================
+Velvet was originally developed for genome assembly, and Oases was created as an add on for RNA-seq transcriptome assembly, so both programs much be used to complete your transcriptome assembly. To install Velvet::
+	git clone git://github.com/dzerbino/velvet.git
+	cd velvet
+	make
+	make 'MAXKMERLENGTH=92'
+	cp velvet* /usr/local/bin
+	
+    
+As with most programs there are tons of options and they can be found here http://www.ebi.ac.uk/~zerbino/velvet/ under Manual    
+    
+Now for Oases::
+	cd /mnt
+	git clone git://github.com/dzerbino/oases.git
+	cd oases
+	make
+	make 'VELVET_DIR=/path/to/velvet'
+	make 'MAXKMERLENGTH=92'
+	cp oases /usr/local/bin
+
+===========================================
+Diginorm the reads to a coverage of 20
+===========================================
+
+Using variable coverage did not show any improvement, so a single pass of diginorm was used:
+	cd /mnt/occulta
+	normalize-by-median.py -p -C 20 -k 20 -N 4 -x 2e9 -s hash *.pe 
+	normalize-by-median.py -p -C 20 -k 20 -N 4 -x 2e9 -l hash *.se *.gz
+
+===========================================
+Assemble the reads using velvet/oases 
+===========================================
+
+
+	velveth dn_output 19,37,2 -fastq -shortPaired *.pe.keep -short *.se.keep *.gz.keep
+	for((n=19;n<37;n=n+2));do velvetg dn_output_"$n" -cov_cutoff auto -exp_cov auto -read_trkg yes -scaffolding no  -ins_length 150; done
+	for((n=19;n<37;n=n+2));do oases dn_output_"$n"; done
+
+	for((i = 19;i<=35;i=i+2));do mv dn_output_"$i"/transcripts.fa Mocc_dn_k"$i"_transcipts.fa;done 
+
+The same commands and parameters are used for the raw reads
+
+	velveth raw_output 19,37,2 -fastq -shortPaired *.pe -short *.se *.gz
+	for((n=19;n<37;n=n+2));do velvetg raw_output_"$n" -cov_cutoff auto -exp_cov auto -read_trkg yes -scaffolding no  -ins_length 150; done
+	for((n=19;n<37;n=n+2));do oases raw_output_"$n"; done
+	
+	for((i = 19;i<=35;i=i+2));do mv raw_output_"$i"/transcripts.fa Mocc_raw_k"$i"_transcipts.fa;done
+
+==============================================
+Assemble the reads using trinity
+==============================================
+
+	for i in *.pe.keep; do split-paired-reads.py $i;done
+	cat *keep.1 > left.fq
+	cat *keep.2 > right.fq
+	cat *.se.keep *.gz.keep >> *left.fq
+	Trinity.pl --seqType fq --left left.fq --right right.fq --min_contig_length 200 --CPU 4 --SS_lib_type F --JM 16G --output occ_dn_trinity
+
+	split-paired-reads.py *.pe
+	gunzip *.gz
+	cat *.se *.fq > *pe.1
+
+	Trinity.pl --seqType fq --left *pe.1 --right *pe.2 --min_contig_length 200 --CPU 4 --SS_lib_type F --JM 16G --output occ_dn_trinity
+
+================================================
+Install and run blast
+================================================
+
+	cd /mnt/
+	curl -O ftp://ftp.ncbi.nih.gov/blast/executables/release/2.2.24/blast-2.2.24-x64-linux.tar.gz 
+	tar xzf blast-2.2.24-x64-linux.tar.gz 
+	cp blast-2.2.24/bin/* /usr/local/bin 
+	cp -r blast-2.2.24/data /usr/local/blast-data
+
+Format all the databases:
+	for i *transcripts.fa; do formatdb -i $i -p F
+
+Blast Ciona again all assembled transcriptomes:
+	for i *transcripts.fa; do blastall -p tblastn -i /mnt/molgula_pipeline/ciona_transcriptome.fa -d $i -e -e 1-e6 -v 2 -b 2 -o ciona.x.${i/fa/txt};done
+
+
+The commands were the same for oculata and can be executed with assemble_oculata.sh
