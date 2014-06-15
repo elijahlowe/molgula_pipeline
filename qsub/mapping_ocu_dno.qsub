@@ -1,0 +1,36 @@
+#!/bin/bash -login
+
+#PBS -l walltime=24:00:00,nodes=1:ppn=1,mem=16gb
+#PBS -N Mocu_oases_dn_trans_cd_mapping
+#PBS -A ged-intel11
+#PBS -M elijahlowe@gmail.com
+#PBS -m abe
+
+module load bowtie2
+module load BEDTools
+module load SAMTools
+
+Trans='/mnt/home/loweelij/transcriptomes/final_assem/Mocu_25_dn_trans_cd.fa'
+WRKSP='/mnt/scratch/loweelij/mol_paper/Mocu_oases_dn_mapping/'
+output=Mocc_bowtie
+reference='/mnt/home/loweelij/genomes/Mocc_genome_v1.1.fa'
+reference_index=Mocu_genome_bowtie2
+mkdir ${WRKSP}
+cd ${WRKSP}
+ln -fs /mnt/home/loweelij/oculata/round1/*paired*.gz .
+for i in /mnt/home/loweelij/oculata/round1/*single.fq.gz;do gunzip -c $i > $(basename $i .gz);done
+for i in *paired*; do python /mnt/home/loweelij/khmer/scripts/split-paired-reads.py $i;done
+
+bowtie2-build ${Trans} ${reference_index}
+bowtie2 -q -p 8 -S mocu_f3.sam -x ${reference_index} -1 62GAWAAXX_1_trim.paired.fq.gz.1 -2 62GAWAAXX_1_trim.paired.fq.gz.2 -U 62GAWAAXX_1_trim.single.fq
+bowtie2 -q -p 8 -S mocu_f4.sam -x ${reference_index} -1 62GAWAAXX_4_trim.paired.fq.gz.1 -2 62GAWAAXX_4_trim.paired.fq.gz.2 -U 62GAWAAXX_4_trim.single.fq
+bowtie2 -q -p 8 -S mocu_f6.sam -x ${reference_index} -1 62GAWAAXX_7_trim.paired.fq.gz.1 -2 62GAWAAXX_7_trim.paired.fq.gz.2 -U 62GAWAAXX_7_trim.single.fq
+
+for i in *.sam;do samtools view -bS $i > ${i/.sam/.bam};done
+for i in *.bam;do samtools sort $i $i.sorted;done
+for i in *.bam.sorted.bam; do samtools index $i;done
+
+
+
+qstat -f ${PBS_JOBID}
+

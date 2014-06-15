@@ -1,0 +1,38 @@
+#!/bin/bash -login
+
+#PBS -l walltime=24:00:00,nodes=1:ppn=8,mem=16gb
+#PBS -N Mocc_25_dn_trans_cd_mapping
+#PBS -A ged-intel11
+#PBS -M elijahlowe@gmail.com
+#PBS -m abe
+
+module load bowtie2
+module load BEDTools
+module load SAMTools
+
+Trans='/mnt/home/loweelij/transcriptomes/final_assem/Mocc_25_dn_trans_cd.fa'
+WRKSP='/mnt/scratch/loweelij/mol_paper/Mocc_25_dn_mapping/'
+output=Mocc_bowtie
+reference='/mnt/home/loweelij/genomes/Mocc_genome_v1.1.fa'
+reference_index=Mocc_genome_bowtie2
+#mkdir ${WRKSP}
+cd ${WRKSP}
+#ln -fs /mnt/home/loweelij/occulta/round*/*pe.gz .
+#for i in /mnt/home/loweelij/occulta/round*/*se.gz;do gunzip -c $i > $(basename $i .gz);done
+#for i in *pe.gz; do python /mnt/home/loweelij/khmer/scripts/split-paired-reads.py $i;done
+
+bowtie2-build ${Trans} ${reference_index}
+bowtie2 -q -p 8 -S mocc_f3.sam -x ${reference_index} -1 62GAWAAXX_3_trim.fq.pe.gz.1 -2 62GAWAAXX_3_trim.fq.pe.gz.2 -U 62GAWAAXX_3_trim.fq.se
+bowtie2 -q -p 8 -S mocc_f3.2.sam -x ${reference_index} -1 Mocc-F3.trim.fq.pe.gz.1 -2 Mocc-F3.trim.fq.pe.gz.2 -U Mocc-F3.trim.fq.se
+bowtie2 -q -p 8 -S mocc_f4.sam -x ${reference_index} -1 Mocc-F4.trim.fq.pe.gz.1 -2 Mocc-F4.trim.fq.pe.gz.2 -U Mocc-F4.trim.fq.se
+bowtie2 -q -p 8 -S mocc_f5.sam -x ${reference_index} -1 Mocc-F5.trim.fq.pe.gz.1 -2 Mocc-F5.trim.fq.pe.gz.2 -U Mocc-F5.trim.fq.se
+bowtie2 -q -p 8 -S mocc_f6.sam -x ${reference_index} -1 Mocc-F6.trim.fq.pe.gz.1 -2 Mocc-F6.trim.fq.pe.gz.2 -U Mocc-F6.trim.fq.se
+
+for i in *.sam;do samtools view -bS $i > ${i/.sam/.bam};done
+for i in *.bam;do samtools sort $i $i.sorted;done
+for i in *.bam.sorted.bam; do samtools index $i;done
+
+
+
+qstat -f ${PBS_JOBID}
+
