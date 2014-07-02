@@ -1,0 +1,31 @@
+#!/bin/bash -login
+
+#PBS -l walltime=24:00:00,nodes=1:ppn=8,mem=168gb
+#PBS -N dn_ocu_oases
+#PBS -A ged-intel11
+#PBS -M elijahlowe@gmail.com
+#PBS -m abe
+
+module load screed
+module load khmer
+module load oases
+module load velvet
+
+WKDR='/mnt/scratch/loweelij/mol_paper/dn_ocu_oases_pytrim/'
+mkdir $WKDR
+cd $WKDR
+for i in ~/oculata/round1/*[ps]*gz; do gunzip -c $i > $(basename $i .gz);done
+python /mnt/home/loweelij/khmer/scripts/normalize-by-median.py -p -C 20 -k 20 -N 4 -x 4e9 --savehash mocu_tr_normC20k20.kh *paired*
+wait
+python /mnt/home/loweelij/khmer/scripts/normalize-by-median.py -C 20 -k 20 --loadhash mocu_tr_normC20K20.kh *single*
+wait
+paired=*paired*keep
+single=*single*keep
+velveth ${WKDR}output 21,37,2 -fastq -shortPaired $paired -short $single
+wait
+for((n=21;n<37;n=n+2));do velvetg ${WKDR}output_"$n" -cov_cutoff auto -exp_cov auto -read_trkg yes -scaffolding no -ins_length 250; done
+wait
+for((n=21;n<37;n=n+2));do oases ${WKDR}output_"$n"; done
+
+qstat -f ${PBS_JOBID}
+

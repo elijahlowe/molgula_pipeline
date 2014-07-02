@@ -1,0 +1,28 @@
+#!/bin/bash -login
+
+#PBS -l walltime=48:00:00,nodes=1:ppn=8,mem=32gb
+#PBS -N raw_ocu_tri_pytrim
+#PBS -A ged-intel11
+#PBS -M elijahlowe@gmail.com
+#PBS -m abe
+
+module load screed
+module load khmer
+module load bowtie
+module load trinity
+
+WKSP='/mnt/scratch/loweelij/mol_paper/raw_ocu_tri_pytrim/'
+mkdir $WKSP
+cd $WKSP
+for i in ~/oculata/round1/*[ps]*gz; do gunzip -c $i > $(basename $i .gz);done
+for i in *paired*; do split-paired-reads.py $i;done
+wait
+cat *.1 > left.fq
+cat *.2 > right.fq
+wait
+cat *single* >> left.fq
+wait
+Trinity.pl --left left.fq --right right.fq --seqType fq -JM 16G
+
+qstat -f ${PBS_JOBID}
+
