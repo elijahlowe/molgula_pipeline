@@ -14,17 +14,19 @@ output = csv.writer(sys.stdout)
 
 # parse BLAST records
 idn,cnt,num,score = 0,0,0,0
+num_hits = 0
 for record in blastparser.parse_file(filename):
-#    for hit in record:
-    idn = record[0].matches[0].identity + idn
-    score= record[0].matches[0].score + score
-    cnt = cnt + 1
+    for hit in range(len(record[0].matches)):
+        idn = record[0].matches[hit].identity + idn
+        score= record[0].matches[0].score + score
+        cnt = cnt + 1
+    num_hits = num_hits + 1
     if record[0].matches[0].identity >= 50:
         num = num+1
 print cnt
 print filename
 print "avg idn", idn/float(cnt)
-print "total hits", cnt
+print "total hits", num_hits
 print "percent > 0.5", num/float(cnt)
 print "avg bit score", score/float(cnt)
 

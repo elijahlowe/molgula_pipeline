@@ -30,7 +30,10 @@ for i in *.sam;do samtools view -bS $i > ${i/.sam/.bam};done
 for i in *.bam;do samtools sort $i $i.sorted;done
 for i in *.bam.sorted.bam; do samtools index $i;done
 
+for i in *.bam.sorted.bam; do samtools flagstat $i > $i.stat;done
+samtools merge mocu_dno.bam *.bam.sorted.bam
 
+bedtools bamtofastq -i mocu_dno.bam -fq /dev/stdout -fq2 /dev/stdout > mocu_dno.ilv.fq
 
 qstat -f ${PBS_JOBID}
 
