@@ -1,0 +1,17 @@
+#!/bin/bash -login
+
+#PBS -l walltime=4:00:00,nodes=1:ppn=4,mem=16gb
+#PBS -N mocc_23_raw
+#PBS -A ged-intel11
+#PBS -M elijahlowe@gmail.com
+#PBS -m abe
+
+module load BLAST
+
+OUTPUT='/mnt/scratch/loweelij/blastdb/'
+DB_DIR='/mnt/scratch/loweelij/blastdb/'
+blastall -p tblastn -a 4 -v 2 -b 2 -e 1e-6 -i /mnt/home/loweelij/transcriptomes/ciona_transcriptome.fa -d ${DB_DIR}Mocc_23_raw_cd.fa \
+-o ${OUTPUT}mocc_23_raw.txt
+
+qstat -f ${PBS_JOBID}
+
