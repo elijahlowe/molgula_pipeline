@@ -1,0 +1,14 @@
+
+#!/bin/bash -login
+
+#PBS -l walltime=1:00:00,nodes=1:ppn=32,mem=16gb
+#PBS -N 
+#PBS -A ged-intel11
+#PBS -M elijahlowe@gmail.com
+#PBS -m abe
+
+
+
+
+qstat -f ${PBS_JOBID}
+
