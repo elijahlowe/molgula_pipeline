@@ -23,5 +23,7 @@ for((n=21;n<37;n=n+2));do velvetg ${WKDR}output_"$n" -cov_cutoff auto -exp_cov a
 wait
 for((n=21;n<37;n=n+2));do oases ${WKDR}output_"$n"; done
 
+for((i=21;i<=35;i=i+2)); do extract-long-sequences.py 200 output_"$i"/transcripts.fa > tmp; cd-hit-est -i tmp -c 0.99 -o Mocc_"$i"_raw_cd.fa;done
+
 qstat -f ${PBS_JOBID}
 
